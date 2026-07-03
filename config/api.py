@@ -1,5 +1,7 @@
 from ninja import NinjaAPI
+from ninja.errors import Throttled
 from ninja.throttling import AnonRateThrottle, AuthRateThrottle
+
 from ninja_simple_jwt.auth.views.api import mobile_auth_router, web_auth_router
 
 from courses.api import router as courses_router, lessons_router
@@ -8,25 +10,21 @@ from courses.auth_api import router as auth_router
 from courses.enrollment_api import router as enrollment_router
 
 
-class AnonThrottle(AnonRateThrottle):
-    # AnonRateThrottle.__init__ ignores a class-level `rate` attribute (it only
-    # honours the constructor arg or falls back to ninja's default THROTTLE_RATES),
-    # so the rate has to be forced through super().__init__().
-    def __init__(self):
-        super().__init__(rate="20/min")
-
-
-class AuthThrottle(AuthRateThrottle):
-    def __init__(self):
-        super().__init__(rate="100/min")
-
-
 apiv1 = NinjaAPI(
     title="Simple LMS API",
     version="1.0",
     urls_namespace="v1",
-    throttle=[AnonThrottle(), AuthThrottle()],
+    # Pertemuan 10: request ke-11 dalam 1 menit harus kena throttle.
+    # (rate diteruskan sebagai constructor arg, bukan class attribute -
+    # AnonRateThrottle/AuthRateThrottle hanya membaca rate lewat sini)
+    throttle=[AnonRateThrottle("10/m"), AuthRateThrottle("100/m")],
 )
+
+
+@apiv1.exception_handler(Throttled)
+def on_throttled(request, exc: Throttled):
+    # Pertemuan 10 spec: pesan "Too many request" saat limit terlampaui.
+    return apiv1.create_response(request, {"detail": "Too many request"}, status=429)
 
 # Pertemuan 7/8 - custom JWT auth (config.auth.JWTAuth) used across the app
 apiv1.add_router("/auth/", auth_router)

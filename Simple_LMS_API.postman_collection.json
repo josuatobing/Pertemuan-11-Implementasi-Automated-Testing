@@ -220,7 +220,7 @@
               "host": ["{{base_url}}"],
               "path": ["api", "v1", "courses", ""]
             },
-            "description": "Default page_size=10, ordering=-created_at. Response shape: {items: [...], count: N}"
+            "description": "Default page_size=5 (Pertemuan 10), ordering=-created_at. Response shape: {items: [...], count: N}"
           },
           "response": []
         },
@@ -239,16 +239,20 @@
           "response": []
         },
         {
-          "name": "Filter by Price (price > 50000)",
+          "name": "Filter by Price Range (price_gte & price_lte)",
           "request": {
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{base_url}}/api/v1/courses/?price=50000",
+              "raw": "{{base_url}}/api/v1/courses/?price_gte=50000&price_lte=200000",
               "host": ["{{base_url}}"],
               "path": ["api", "v1", "courses", ""],
-              "query": [{ "key": "price", "value": "50000", "description": "menampilkan course dengan price > 50000" }]
-            }
+              "query": [
+                { "key": "price_gte", "value": "50000", "description": "harga >= 50000" },
+                { "key": "price_lte", "value": "200000", "description": "harga <= 200000" }
+              ]
+            },
+            "description": "Materi 10: filtering pakai konvensi gte/lte. Boleh isi salah satu saja (price_gte doang, atau price_lte doang)."
           },
           "response": []
         },
@@ -272,12 +276,12 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{base_url}}/api/v1/courses/?search=python&price=50000&ordering=-price&page=1",
+              "raw": "{{base_url}}/api/v1/courses/?search=python&price_gte=50000&ordering=-price&page=1",
               "host": ["{{base_url}}"],
               "path": ["api", "v1", "courses", ""],
               "query": [
                 { "key": "search", "value": "python" },
-                { "key": "price", "value": "50000" },
+                { "key": "price_gte", "value": "50000" },
                 { "key": "ordering", "value": "-price" },
                 { "key": "page", "value": "1" }
               ]
@@ -534,10 +538,10 @@
       ]
     },
     {
-      "name": "7. Rate Limiting (Materi 8)",
+      "name": "7. Rate Limiting (Materi 8 & 10)",
       "item": [
         {
-          "name": "Anon Request (jalankan >20x/menit via Runner untuk lihat 429)",
+          "name": "Anon Request (jalankan >10x/menit via Runner untuk lihat 429)",
           "request": {
             "method": "GET",
             "header": [],
@@ -546,7 +550,7 @@
               "host": ["{{base_url}}"],
               "path": ["api", "v1", "courses", ""]
             },
-            "description": "AnonRateThrottle = 20/menit per IP, AuthRateThrottle = 100/menit per user. Terapkan lewat Postman Collection Runner (loop 25x) untuk melihat response 429 'Too many requests.' setelah request ke-21."
+            "description": "Pertemuan 10: AnonRateThrottle = 10/menit per IP, AuthRateThrottle = 100/menit per user. Jalankan lewat Postman Collection Runner (Iterations=13, Delay=0) untuk melihat response 429 {\"detail\": \"Too many request\"} setelah request ke-11."
           },
           "response": []
         }
@@ -722,6 +726,26 @@
               "path": ["silk", ""]
             },
             "description": "Buka di browser (butuh login admin Django) untuk melihat profiling request/query."
+          },
+          "response": []
+        },
+        {
+          "name": "Course List Page - HTML (Pertemuan 10)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/courses-page/?search=python&price_gte=50000&ordering=-price&page=1",
+              "host": ["{{base_url}}"],
+              "path": ["courses-page", ""],
+              "query": [
+                { "key": "search", "value": "python" },
+                { "key": "price_gte", "value": "50000" },
+                { "key": "ordering", "value": "-price" },
+                { "key": "page", "value": "1" }
+              ]
+            },
+            "description": "Halaman server-rendered HTML (bukan JSON) dengan Search, Sorting, Pagination 5 data/halaman. Buka langsung di browser untuk screenshot - klik 'Preview' di Postman juga bisa untuk render HTML-nya."
           },
           "response": []
         }

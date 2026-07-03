@@ -26,22 +26,27 @@ class CourseOut(Schema):
 
 
 class CourseFilter(FilterSchema):
-    price: Optional[int] = None
-    created_at: Optional[datetime] = None
+    # Materi 10: gte/lte range filtering (best practice) + search
+    price_gte: Optional[int] = None
+    price_lte: Optional[int] = None
+    created_gte: Optional[datetime] = None
+    created_lte: Optional[datetime] = None
     search: Optional[str] = Field(
         None,
         q=['name__icontains', 'description__icontains'],
     )
 
-    def filter_price(self, value: Optional[int]) -> Q:
-        if value is None:
-            return Q()
-        return Q(price__gt=value)
+    def filter_price_gte(self, value: Optional[int]) -> Q:
+        return Q(price__gte=value) if value is not None else Q()
 
-    def filter_created_at(self, value: Optional[datetime]) -> Q:
-        if value is None:
-            return Q()
-        return Q(created_at__gt=value)
+    def filter_price_lte(self, value: Optional[int]) -> Q:
+        return Q(price__lte=value) if value is not None else Q()
+
+    def filter_created_gte(self, value: Optional[datetime]) -> Q:
+        return Q(created_at__gte=value) if value is not None else Q()
+
+    def filter_created_lte(self, value: Optional[datetime]) -> Q:
+        return Q(created_at__lte=value) if value is not None else Q()
 
 
 class CourseUpdate(Schema):

@@ -32,7 +32,7 @@ MAX_ATTACHMENT_SIZE = 10 * 1024 * 1024  # 10MB
 # ---------------------------------------------------------------------------
 
 @router.get("", response=List[CourseOut], auth=None)
-@paginate(PageNumberPagination, page_size=10)
+@paginate(PageNumberPagination, page_size=5)  # Pertemuan 10: 5 data per halaman
 def list_courses(request, filters: CourseFilter = Query(...), ordering: str = '-created_at'):
     """
     List courses dengan filtering (search, price, created_at), sorting (ordering)

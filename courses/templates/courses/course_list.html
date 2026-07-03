@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <title>Daftar Course - Simple LMS</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      font-family: -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      background: #f4f5f7;
+      color: #1f2430;
+      margin: 0;
+      padding: 2rem 1rem;
+    }
+    .wrap { max-width: 960px; margin: 0 auto; }
+    h1 { margin-bottom: 0.25rem; }
+    .subtitle { color: #6b7280; margin-top: 0; margin-bottom: 1.5rem; }
+
+    .toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+      background: #fff;
+      padding: 1rem;
+      border-radius: 10px;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.06);
+      margin-bottom: 1.25rem;
+      align-items: end;
+    }
+    .field { display: flex; flex-direction: column; gap: 0.25rem; }
+    .field label { font-size: 0.75rem; color: #6b7280; font-weight: 600; text-transform: uppercase; }
+    .field input, .field select {
+      padding: 0.5rem 0.65rem;
+      border: 1px solid #d1d5db;
+      border-radius: 6px;
+      font-size: 0.9rem;
+      min-width: 160px;
+    }
+    .toolbar button {
+      padding: 0.55rem 1.1rem;
+      border: none;
+      border-radius: 6px;
+      background: #4f46e5;
+      color: #fff;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    .toolbar a.reset {
+      align-self: center;
+      color: #6b7280;
+      font-size: 0.85rem;
+      text-decoration: none;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background: #fff;
+      border-radius: 10px;
+      overflow: hidden;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.06);
+    }
+    th, td { padding: 0.75rem 1rem; text-align: left; font-size: 0.9rem; }
+    thead th { background: #eef0ff; color: #4338ca; font-size: 0.75rem; text-transform: uppercase; }
+    tbody tr:not(:last-child) { border-bottom: 1px solid #f0f0f2; }
+    .price { font-variant-numeric: tabular-nums; }
+    .empty { padding: 2rem; text-align: center; color: #6b7280; }
+
+    .pagination {
+      display: flex;
+      gap: 0.4rem;
+      justify-content: center;
+      margin-top: 1.5rem;
+      flex-wrap: wrap;
+    }
+    .pagination a, .pagination span {
+      padding: 0.45rem 0.8rem;
+      border-radius: 6px;
+      border: 1px solid #d1d5db;
+      text-decoration: none;
+      color: #1f2430;
+      font-size: 0.85rem;
+    }
+    .pagination .current { background: #4f46e5; border-color: #4f46e5; color: #fff; font-weight: 600; }
+    .pagination .disabled { color: #c1c4cc; }
+    .info { text-align: center; color: #6b7280; font-size: 0.8rem; margin-top: 0.5rem; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>Daftar Course</h1>
+    <p class="subtitle">Search, Sorting &amp; Pagination (Pertemuan 10) &middot; {{ page_obj.paginator.count }} course ditemukan</p>
+
+    <form class="toolbar" method="get">
+      <div class="field">
+        <label for="search">Cari nama/deskripsi</label>
+        <input type="text" id="search" name="search" value="{{ search }}" placeholder="mis. python">
+      </div>
+      <div class="field">
+        <label for="price_gte">Harga min</label>
+        <input type="number" id="price_gte" name="price_gte" value="{{ price_gte }}" placeholder="mis. 50000">
+      </div>
+      <div class="field">
+        <label for="price_lte">Harga maks</label>
+        <input type="number" id="price_lte" name="price_lte" value="{{ price_lte }}" placeholder="mis. 200000">
+      </div>
+      <div class="field">
+        <label for="ordering">Urutkan</label>
+        <select id="ordering" name="ordering">
+          <option value="-created_at" {% if ordering == "-created_at" %}selected{% endif %}>Terbaru</option>
+          <option value="created_at" {% if ordering == "created_at" %}selected{% endif %}>Terlama</option>
+          <option value="name" {% if ordering == "name" %}selected{% endif %}>Nama (A-Z)</option>
+          <option value="-name" {% if ordering == "-name" %}selected{% endif %}>Nama (Z-A)</option>
+          <option value="price" {% if ordering == "price" %}selected{% endif %}>Harga Termurah</option>
+          <option value="-price" {% if ordering == "-price" %}selected{% endif %}>Harga Termahal</option>
+        </select>
+      </div>
+      <button type="submit">Terapkan</button>
+      <a class="reset" href="{% url 'course_list_page' %}">Reset</a>
+    </form>
+
+    {% if page_obj.object_list %}
+    <table>
+      <thead>
+        <tr>
+          <th>Nama</th>
+          <th>Deskripsi</th>
+          <th>Harga</th>
+          <th>Instruktur</th>
+          <th>Kategori</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for course in page_obj.object_list %}
+        <tr>
+          <td>{{ course.name }}</td>
+          <td>{{ course.description|truncatechars:60 }}</td>
+          <td class="price">Rp{{ course.price|floatformat:0 }}</td>
+          <td>{{ course.instructor.username }}</td>
+          <td>{{ course.category.name|default:"-" }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+    <div class="empty">Tidak ada course yang cocok dengan filter ini.</div>
+    {% endif %}
+
+    <div class="pagination">
+      {% if page_obj.has_previous %}
+        <a href="?{{ querystring }}&page={{ page_obj.previous_page_number }}">&laquo; Prev</a>
+      {% else %}
+        <span class="disabled">&laquo; Prev</span>
+      {% endif %}
+
+      {% for num in page_obj.paginator.page_range %}
+        {% if num == page_obj.number %}
+          <span class="current">{{ num }}</span>
+        {% else %}
+          <a href="?{{ querystring }}&page={{ num }}">{{ num }}</a>
+        {% endif %}
+      {% endfor %}
+
+      {% if page_obj.has_next %}
+        <a href="?{{ querystring }}&page={{ page_obj.next_page_number }}">Next &raquo;</a>
+      {% else %}
+        <span class="disabled">Next &raquo;</span>
+      {% endif %}
+    </div>
+    <p class="info">Halaman {{ page_obj.number }} dari {{ page_obj.paginator.num_pages }} &middot; 5 data/halaman</p>
+  </div>
+</body>
+</html>

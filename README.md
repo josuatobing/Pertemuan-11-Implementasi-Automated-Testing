@@ -25,10 +25,6 @@ Dibangun dengan **Django 5 + Django Ninja**, dijalankan lewat **Docker Compose**
 **Pertemuan 7/8 - CRUD, Auth, Advanced API Features**
 - Register/Login/Refresh/Me dengan JWT custom + role (`admin`, `instructor`, `student`)
 - CRUD Course & Lesson dengan role-based authorization
-- Filtering (`search`, `price`, `created_at`) via `FilterSchema`
-- Sorting (`ordering=name|-name|price|-price|created_at|-created_at`)
-- Pagination (`PageNumberPagination`, 10 item/halaman)
-- Rate limiting (anon 20 req/menit, authenticated 100 req/menit)
 - API Versioning (`/api/v1/` vs `/api/v2/` — v2 punya `teacher` sebagai object + `member_count`)
 - Upload gambar course & attachment lesson, download attachment (dengan cek kepemilikan/enrollment)
 - Partial update (`PATCH`) untuk Course dan Lesson
@@ -37,6 +33,13 @@ Dibangun dengan **Django 5 + Django Ninja**, dijalankan lewat **Docker Compose**
 - Library `django-ninja-simple-jwt` (RS256, key pair `jwt-signing.pem`/`.pub`)
 - Endpoint mobile (`sign-in`, `token-refresh`) & web (`sign-in`, `token-refresh` via HttpOnly cookie, `sign-out`)
 - Endpoint demo terproteksi `HttpJwtAuth` (`courses/api_jwt_demo.py`)
+
+**Pertemuan 10 - Throttling, Pagination, Filtering**
+- Rate limiting: `AnonRateThrottle('10/m')` (anon) & `AuthRateThrottle('100/m')` (authenticated) di level `NinjaAPI`, pesan custom `"Too many request"` saat limit terlampaui (`config/api.py`)
+- Pagination: `PageNumberPagination(page_size=5)` — 5 data/halaman (`courses/api.py`)
+- Filtering dengan konvensi `gte`/`lte`: `price_gte`, `price_lte`, `created_gte`, `created_lte`, plus `search` (`courses/schemas.py` — `CourseFilter`)
+- Sorting: `ordering=name|-name|price|-price|created_at|-created_at`
+- Halaman **HTML** `courses-page/` (server-rendered, bukan JSON) dengan form Search + Sorting + Pagination (`courses/views.py`, `courses/templates/courses/course_list.html`)
 
 ---
 
@@ -51,12 +54,14 @@ config/
   auth.py               # JWTAuth (custom, dipakai di seluruh app)
 courses/
   models.py             # Course (+price, image, created_at), Lesson (+file_attachment)
-  schemas.py            # CourseOut, CourseFilter, CourseUpdate, LessonOut, LessonUpdate, CourseOutV2
+  schemas.py            # CourseOut, CourseFilter (gte/lte), CourseUpdate, LessonOut, LessonUpdate, CourseOutV2
   api.py                 # courses_router + lessons_router (CRUD, filter/sort/paginate, upload/download, PATCH)
   api_jwt_demo.py        # endpoint demo Pertemuan 9 (HttpJwtAuth)
   auth_api.py             # register/login/refresh/me (JWT custom)
   enrollment_api.py       # enroll, my-courses, mark progress
   permissions.py          # is_instructor / is_admin / is_student
+  views.py                # course_list_page - halaman HTML Pertemuan 10 (search/sort/pagination)
+  templates/courses/course_list.html
 jwt-signing.pem / .pub    # RSA key pair untuk django-ninja-simple-jwt (auto-generate)
 Simple_LMS_API.postman_collection.json
 ```
@@ -94,6 +99,7 @@ Server berjalan di `http://localhost:8000`.
 - v1: `http://localhost:8000/api/v1/docs`
 - v2: `http://localhost:8000/api/v2/docs`
 - Silk profiling dashboard: `http://localhost:8000/silk/` (butuh login admin)
+- Halaman Course (HTML, Pertemuan 10): `http://localhost:8000/courses-page/`
 
 ---
 
@@ -113,7 +119,7 @@ Server berjalan di `http://localhost:8000`.
 ### Courses (`/api/v1/courses/`)
 | Method | Endpoint | Auth | Fitur |
 |---|---|---|---|
-| GET | `/courses/?search=&price=&ordering=&page=` | - | filter + sort + pagination |
+| GET | `/courses/?search=&price_gte=&price_lte=&created_gte=&created_lte=&ordering=&page=` | - | filter (gte/lte) + sort + pagination (5/halaman) |
 | GET | `/courses/{id}` | - | detail + list lesson |
 | POST | `/courses/?name=&description=&price=&category_id=` | Bearer (instructor) | create |
 | PATCH | `/courses/{id}` | Bearer (owner) | partial update (JSON body) |
@@ -150,6 +156,11 @@ Server berjalan di `http://localhost:8000`.
 | GET | `/jwt-demo/hello` | contoh endpoint dilindungi `HttpJwtAuth` |
 | GET | `/jwt-demo/me` | info user dari token |
 
+### Pertemuan 10 — Halaman HTML (`/courses-page/`)
+| Method | Endpoint | Keterangan |
+|---|---|---|
+| GET | `/courses-page/?search=&price_gte=&price_lte=&ordering=&page=` | Halaman HTML (bukan JSON), publik, 5 course/halaman |
+
 ---
 
 ## Testing dengan Postman
@@ -160,13 +171,14 @@ Server berjalan di `http://localhost:8000`.
    1. Folder **1. Auth** → jalankan Register (instructor/student/admin) lalu Login (masing-masing role). Token otomatis tersimpan ke collection variables lewat test script.
    2. Folder **3. Courses - Protected** → Create Course (pakai `instructor_access_token`) untuk membuat data uji.
    3. Folder **2, 4, 5, 6** bisa dites bebas sesudah ada data.
-   4. Folder **7. Rate Limiting** → jalankan request yang sama >20x lewat Collection Runner untuk lihat response `429`.
+   4. Folder **7. Rate Limiting** → jalankan request yang sama >10x lewat Collection Runner (Iterations=13, Delay=0) untuk lihat response `429`.
    5. Folder **8. Pertemuan 9** → Mobile/Web Sign In dulu (isi token `jwt_demo_access_token`), baru endpoint Protected Demo.
+   6. Halaman HTML Pertemuan 10 dites langsung di browser: `http://localhost:8000/courses-page/`.
 
 ---
 
 ## Catatan Implementasi (bug yang ditemukan & diperbaiki saat testing)
 
-1. **Rate limiting tidak jalan di awal** — `AnonRateThrottle`/`AuthRateThrottle` dari Django Ninja **mengabaikan class attribute `rate`**; rate custom harus dipaksa lewat `super().__init__(rate=...)` di `config/api.py`. Sudah diperbaiki dan diverifikasi (`429` muncul tepat di request ke-21 untuk limit 20/menit).
+1. **Rate limiting tidak jalan di awal** — kalau rate diset lewat *class attribute* `rate = "..."` di subclass `AnonRateThrottle`, itu **diabaikan**; `SimpleRateThrottle.__init__` cuma membaca rate dari constructor arg (`AnonRateThrottle("10/m")`) atau dari default `THROTTLE_RATES` ninja. Sudah diperbaiki dengan instansiasi langsung `AnonRateThrottle("10/m")` (pola yang sama seperti di materi resmi), dan diverifikasi (`429` muncul tepat di request ke-11 untuk limit 10/menit).
 2. **Refresh cookie web auth tidak pernah terkirim balik** — `WEB_REFRESH_COOKIE_PATH` default dari `django-ninja-simple-jwt` (`/api/auth/web`) tidak cocok dengan mount path project ini (`/api/v1/auth/web/`), sehingga browser tidak mengirim cookie ke `token-refresh`/`sign-out`. Diperbaiki via `NINJA_SIMPLE_JWT["WEB_REFRESH_COOKIE_PATH"]` di `settings.py`.
 3. **Trailing slash** — endpoint `POST /courses/` wajib pakai trailing slash (`APPEND_SLASH`), sedangkan `GET/PATCH/DELETE /courses/{id}` tidak pakai slash.

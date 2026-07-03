@@ -19,6 +19,8 @@ from django.conf.urls.static import static
 from django.contrib import admin
 from django.urls import include, path
 
+from courses.views import course_list_page
+
 from .api import apiv1
 from .api_v2 import apiv2
 
@@ -27,6 +29,7 @@ urlpatterns = [
     path('silk/', include('silk.urls', namespace='silk')),
     path('api/v1/', apiv1.urls),
     path('api/v2/', apiv2.urls),
+    path('courses-page/', course_list_page, name='course_list_page'),
 ]
 
 if settings.DEBUG:
