@@ -1,0 +1,745 @@
+{
+  "info": {
+    "_postman_id": "simple-lms-api-collection",
+    "name": "Simple LMS API",
+    "description": "REST API Testing Collection untuk Simple LMS.\n\nMencakup:\n- Pertemuan 7/8: CRUD, custom JWT auth, filtering, sorting, pagination, rate limiting, API versioning (v1/v2), file upload/download, PATCH partial update.\n- Pertemuan 9: Otentikasi JWT via library django-ninja-simple-jwt (mobile & web flow).\n\nJalankan folder \"Auth\" dulu untuk mendapatkan token, baru lanjut ke folder lainnya. Token otomatis tersimpan ke collection variables lewat test script di masing-masing request login.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "1. Auth (Custom JWT - Pertemuan 7/8)",
+      "item": [
+        {
+          "name": "Register Instructor",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/auth/register?username=dosen01&password=password123&role=instructor",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "auth", "register"],
+              "query": [
+                { "key": "username", "value": "dosen01" },
+                { "key": "password", "value": "password123" },
+                { "key": "role", "value": "instructor", "description": "admin | instructor | student" }
+              ]
+            },
+            "description": "Register user baru dengan role. Django Ninja membaca parameter sederhana (str/int) sebagai query params, bukan form body."
+          },
+          "response": []
+        },
+        {
+          "name": "Register Student",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/auth/register?username=mhs01&password=password123&role=student",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "auth", "register"],
+              "query": [
+                { "key": "username", "value": "mhs01" },
+                { "key": "password", "value": "password123" },
+                { "key": "role", "value": "student" }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Register Admin",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/auth/register?username=admin01&password=password123&role=admin",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "auth", "register"],
+              "query": [
+                { "key": "username", "value": "admin01" },
+                { "key": "password", "value": "password123" },
+                { "key": "role", "value": "admin" }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Login as Instructor",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "pm.collectionVariables.set('instructor_access_token', jsonData.access);",
+                  "pm.collectionVariables.set('instructor_refresh_token', jsonData.refresh);",
+                  "console.log('Instructor access token saved');"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/auth/login?username=dosen01&password=password123",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "auth", "login"],
+              "query": [
+                { "key": "username", "value": "dosen01" },
+                { "key": "password", "value": "password123" }
+              ]
+            },
+            "description": "Login dan simpan access/refresh token instructor secara otomatis ke collection variables."
+          },
+          "response": []
+        },
+        {
+          "name": "Login as Student",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "pm.collectionVariables.set('student_access_token', jsonData.access);",
+                  "pm.collectionVariables.set('student_refresh_token', jsonData.refresh);",
+                  "console.log('Student access token saved');"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/auth/login?username=mhs01&password=password123",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "auth", "login"],
+              "query": [
+                { "key": "username", "value": "mhs01" },
+                { "key": "password", "value": "password123" }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Login as Admin",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "pm.collectionVariables.set('admin_access_token', jsonData.access);",
+                  "pm.collectionVariables.set('admin_refresh_token', jsonData.refresh);",
+                  "console.log('Admin access token saved');"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/auth/login?username=admin01&password=password123",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "auth", "login"],
+              "query": [
+                { "key": "username", "value": "admin01" },
+                { "key": "password", "value": "password123" }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Refresh Token (Instructor)",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/auth/refresh?refresh={{instructor_refresh_token}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "auth", "refresh"],
+              "query": [
+                { "key": "refresh", "value": "{{instructor_refresh_token}}" }
+              ]
+            },
+            "description": "Dapatkan access token baru menggunakan refresh token"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Current User (Me)",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{instructor_access_token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/auth/me",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "auth", "me"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update Profile (Me)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{instructor_access_token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/auth/me?username=dosen01_updated",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "auth", "me"],
+              "query": [
+                { "key": "username", "value": "dosen01_updated" }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "2. Courses - Filtering, Sorting, Pagination (Materi 8)",
+      "item": [
+        {
+          "name": "List Courses (default, paginated)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/courses/",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "courses", ""]
+            },
+            "description": "Default page_size=10, ordering=-created_at. Response shape: {items: [...], count: N}"
+          },
+          "response": []
+        },
+        {
+          "name": "Search Courses (search=python)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/courses/?search=python",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "courses", ""],
+              "query": [{ "key": "search", "value": "python", "description": "cari di name & description" }]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Filter by Price (price > 50000)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/courses/?price=50000",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "courses", ""],
+              "query": [{ "key": "price", "value": "50000", "description": "menampilkan course dengan price > 50000" }]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Sort by Name (ordering=name)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/courses/?ordering=name",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "courses", ""],
+              "query": [{ "key": "ordering", "value": "name", "description": "name | -name | price | -price | created_at | -created_at" }]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Combined: Search + Filter + Sort + Page",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/courses/?search=python&price=50000&ordering=-price&page=1",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "courses", ""],
+              "query": [
+                { "key": "search", "value": "python" },
+                { "key": "price", "value": "50000" },
+                { "key": "ordering", "value": "-price" },
+                { "key": "page", "value": "1" }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Course Detail (v1)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/courses/{{course_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "courses", "{{course_id}}"]
+            },
+            "description": "Detail course beserta list lessons"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "3. Courses - Protected (Create, PATCH, Delete)",
+      "item": [
+        {
+          "name": "Create Course",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{instructor_access_token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/courses/?name=Belajar Python Dasar&description=Kursus Python untuk pemula&price=75000",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "courses", ""],
+              "query": [
+                { "key": "name", "value": "Belajar Python Dasar" },
+                { "key": "description", "value": "Kursus Python untuk pemula" },
+                { "key": "price", "value": "75000" }
+              ]
+            },
+            "description": "Instructor only. Perhatikan trailing slash pada /courses/ (Django APPEND_SLASH)."
+          },
+          "response": []
+        },
+        {
+          "name": "Partial Update Course (PATCH)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{instructor_access_token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"price\": 80000\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/courses/{{course_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "courses", "{{course_id}}"]
+            },
+            "description": "Hanya field yang dikirim yang berubah (exclude_unset=True). Field lain (name/description/category_id) tidak tersentuh."
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Course (Admin only)",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{admin_access_token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/courses/{{course_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "courses", "{{course_id}}"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "4. File Upload & Download (Materi 8)",
+      "item": [
+        {
+          "name": "Upload Course Image",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{instructor_access_token}}" }
+            ],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                { "key": "file", "type": "file", "src": [] }
+              ]
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/courses/{{course_id}}/upload-image/",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "courses", "{{course_id}}", "upload-image", ""]
+            },
+            "description": "Max 2MB, tipe JPEG/PNG/WebP. Hanya instructor pemilik course."
+          },
+          "response": []
+        },
+        {
+          "name": "Upload Lesson Attachment",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{instructor_access_token}}" }
+            ],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                { "key": "file", "type": "file", "src": [] }
+              ]
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/lessons/{{lesson_id}}/upload-attachment/",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "lessons", "{{lesson_id}}", "upload-attachment", ""]
+            },
+            "description": "Max 10MB. Hanya instructor pemilik course dari lesson tsb."
+          },
+          "response": []
+        },
+        {
+          "name": "Download Lesson Attachment",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{student_access_token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/lessons/{{lesson_id}}/download/",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "lessons", "{{lesson_id}}", "download", ""]
+            },
+            "description": "Hanya instructor pemilik course atau student yang sudah enroll (lihat folder Enrollments)."
+          },
+          "response": []
+        },
+        {
+          "name": "Partial Update Lesson (PATCH)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{instructor_access_token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Pengenalan Python - Updated\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/lessons/{{lesson_id}}/",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "lessons", "{{lesson_id}}", ""]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "5. Enrollments",
+      "item": [
+        {
+          "name": "Enroll to Course",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{student_access_token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/enrollments/?course_id={{course_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "enrollments", ""],
+              "query": [{ "key": "course_id", "value": "{{course_id}}" }]
+            },
+            "description": "Student only"
+          },
+          "response": []
+        },
+        {
+          "name": "Get My Courses",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{student_access_token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/enrollments/my-courses",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "enrollments", "my-courses"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Mark Lesson Complete",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{student_access_token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/enrollments/{{enrollment_id}}/progress?lesson_id={{lesson_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "enrollments", "{{enrollment_id}}", "progress"],
+              "query": [{ "key": "lesson_id", "value": "{{lesson_id}}" }]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "6. API Versioning v1 vs v2 (Materi 8)",
+      "item": [
+        {
+          "name": "Get Course Detail - v1 (teacher = username string)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/courses/{{course_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "courses", "{{course_id}}"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Course Detail - v2 (teacher = object + member_count)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v2/courses/{{course_id}}/",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v2", "courses", "{{course_id}}", ""]
+            },
+            "description": "Breaking change dibanding v1: `teacher` jadi nested object {id, username, full_name}, ditambah `member_count`."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "7. Rate Limiting (Materi 8)",
+      "item": [
+        {
+          "name": "Anon Request (jalankan >20x/menit via Runner untuk lihat 429)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/courses/",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "courses", ""]
+            },
+            "description": "AnonRateThrottle = 20/menit per IP, AuthRateThrottle = 100/menit per user. Terapkan lewat Postman Collection Runner (loop 25x) untuk melihat response 429 'Too many requests.' setelah request ke-21."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "8. Pertemuan 9 - JWT (django-ninja-simple-jwt)",
+      "item": [
+        {
+          "name": "Mobile Sign In",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "pm.collectionVariables.set('jwt_demo_access_token', jsonData.access);",
+                  "pm.collectionVariables.set('jwt_demo_refresh_token', jsonData.refresh);",
+                  "console.log('ninja_simple_jwt tokens saved');"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"dosen01\",\n  \"password\": \"password123\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/auth/mobile/sign-in",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "auth", "mobile", "sign-in"]
+            },
+            "description": "Endpoint bawaan library django-ninja-simple-jwt (app: ninja_simple_jwt). Access & refresh token dikembalikan di body (cocok untuk mobile client)."
+          },
+          "response": []
+        },
+        {
+          "name": "Mobile Token Refresh",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"refresh\": \"{{jwt_demo_refresh_token}}\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/auth/mobile/token-refresh",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "auth", "mobile", "token-refresh"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Web Sign In (sets HttpOnly refresh cookie)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"dosen01\",\n  \"password\": \"password123\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/auth/web/sign-in",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "auth", "web", "sign-in"]
+            },
+            "description": "Access token di body, refresh token dikirim sebagai HttpOnly cookie (scope path /api/v1/auth/web). Aktifkan Postman cookie jar untuk domain localhost agar Web Token Refresh & Sign Out bekerja."
+          },
+          "response": []
+        },
+        {
+          "name": "Web Token Refresh (cookie based)",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/auth/web/token-refresh",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "auth", "web", "token-refresh"]
+            },
+            "description": "Mengandalkan cookie 'refresh' yang di-set oleh Web Sign In (otomatis terkirim oleh Postman cookie jar)."
+          },
+          "response": []
+        },
+        {
+          "name": "Web Sign Out",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/auth/web/sign-out",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "auth", "web", "sign-out"]
+            },
+            "description": "Menghapus cookie refresh di client. Response 204 No Content."
+          },
+          "response": []
+        },
+        {
+          "name": "Protected Demo - Hello",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{jwt_demo_access_token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/jwt-demo/hello",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "jwt-demo", "hello"]
+            },
+            "description": "Dilindungi HttpJwtAuth dari ninja_simple_jwt. Pakai access token dari Mobile/Web Sign In di atas (bukan token dari folder Auth custom JWT)."
+          },
+          "response": []
+        },
+        {
+          "name": "Protected Demo - Me",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{jwt_demo_access_token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/jwt-demo/me",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "jwt-demo", "me"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "9. Docs & Tools",
+      "item": [
+        {
+          "name": "Swagger UI - v1",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/docs",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "docs"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Swagger UI - v2",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v2/docs",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v2", "docs"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Silk Profiling Dashboard",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/silk/",
+              "host": ["{{base_url}}"],
+              "path": ["silk", ""]
+            },
+            "description": "Buka di browser (butuh login admin Django) untuk melihat profiling request/query."
+          },
+          "response": []
+        }
+      ]
+    }
+  ],
+  "variable": [
+    { "key": "base_url", "value": "http://localhost:8000", "type": "default" },
+    { "key": "course_id", "value": "1", "type": "default" },
+    { "key": "lesson_id", "value": "1", "type": "default" },
+    { "key": "enrollment_id", "value": "1", "type": "default" },
+    { "key": "instructor_access_token", "value": "", "type": "default" },
+    { "key": "instructor_refresh_token", "value": "", "type": "default" },
+    { "key": "student_access_token", "value": "", "type": "default" },
+    { "key": "student_refresh_token", "value": "", "type": "default" },
+    { "key": "admin_access_token", "value": "", "type": "default" },
+    { "key": "admin_refresh_token", "value": "", "type": "default" },
+    { "key": "jwt_demo_access_token", "value": "", "type": "default" },
+    { "key": "jwt_demo_refresh_token", "value": "", "type": "default" }
+  ]
+}

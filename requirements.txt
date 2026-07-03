@@ -1,0 +1,9 @@
+Django>=4.2
+psycopg2-binary
+python-dotenv
+Pillow
+django-silk
+django-ninja
+django-ninja-simple-jwt
+PyJWT
+django-cors-headers

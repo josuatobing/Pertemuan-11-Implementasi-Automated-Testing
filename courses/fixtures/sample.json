@@ -1,0 +1,10 @@
+[
+  {
+    "model": "courses.category",
+    "pk": 2,
+    "fields": {
+      "name": "Memasak",
+      "parent": null
+    }
+  }
+]

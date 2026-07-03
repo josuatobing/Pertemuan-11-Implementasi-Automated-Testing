@@ -1,0 +1,30 @@
+# Environment
+.env
+
+# JWT signing keys (django-ninja-simple-jwt) - regenerate locally via:
+#   docker compose exec web python manage.py make_jwt_key
+jwt-signing.pem
+jwt-signing.pub
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+
+# Django
+media/
+staticfiles/
+db.sqlite3
+
+# Docker
+postgres_data/
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
