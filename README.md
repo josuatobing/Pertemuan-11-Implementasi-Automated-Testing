@@ -68,34 +68,56 @@ Simple_LMS_API.postman_collection.json
 
 ---
 
-## Setup & Menjalankan
+## Setup & Menjalankan (dari clone sampai jalan)
 
-1. Copy `.env.example` menjadi `.env` dan sesuaikan bila perlu.
-2. Build & jalankan container:
-   ```bash
-   docker compose up --build -d
-   ```
-3. Jalankan migrasi:
-   ```bash
-   docker compose exec web python manage.py makemigrations courses
-   docker compose exec web python manage.py migrate
-   ```
-4. **Generate JWT signing key** (wajib untuk `django-ninja-simple-jwt`, hanya sekali):
-   ```bash
-   docker compose exec web python manage.py make_jwt_key
-   ```
-   Menghasilkan `jwt-signing.pem` (privat) dan `jwt-signing.pub` (publik) di root project.
-5. (Opsional tapi disarankan) Isi database dengan data contoh:
-   ```bash
-   docker compose exec web python manage.py seed
-   ```
-   Idempotent (aman dijalankan berulang). Membuat 5 akun — `admin/admin123`, `dosen/dosen123`, `dosen2/dosen2123`, `mahasiswa/mahasiswa123`, `mahasiswa2/mahasiswa2123` — plus 4 kategori, 12 course (3 halaman pagination), 12 lesson, dan 3 enrollment.
-6. (Opsional) Buat superuser untuk akses Django admin & Silk:
-   ```bash
-   docker compose exec web python manage.py createsuperuser
-   ```
+**Prasyarat:** Docker Desktop (untuk backend) dan Node.js 18+ (untuk frontend React).
 
-Server berjalan di `http://localhost:8000`.
+### 1. Clone & konfigurasi
+
+```bash
+git clone https://github.com/josuatobing/Pertemuan-11-Implementasi-Automated-Testing.git
+cd Pertemuan-11-Implementasi-Automated-Testing
+cp .env.example .env        # Windows CMD: copy .env.example .env
+```
+
+`.env` default sudah cocok dengan `docker-compose.yml`, tidak perlu diubah.
+
+### 2. Jalankan backend (Django + PostgreSQL)
+
+```bash
+docker compose up --build -d
+docker compose exec web python manage.py migrate
+docker compose exec web python manage.py make_jwt_key   # key JWT (file .pem di-gitignore, wajib generate sekali)
+docker compose exec web python manage.py seed           # isi data contoh (akun, course, lesson, enrollment)
+```
+
+> ⚠️ Jangan lewatkan `migrate` — tanpa itu **semua** endpoint akan error 500 (`relation "silk_request" does not exist`) karena middleware Silk mencatat tiap request ke database.
+
+Backend siap di `http://localhost:8000` (Swagger: `/api/v1/docs`).
+
+Seeder idempotent (aman dijalankan berulang) dan membuat 5 akun — `admin/admin123`, `dosen/dosen123`, `dosen2/dosen2123`, `mahasiswa/mahasiswa123`, `mahasiswa2/mahasiswa2123` — plus 4 kategori, 12 course (3 halaman pagination), 12 lesson, dan 3 enrollment.
+
+### 3. Jalankan frontend React (terminal terpisah)
+
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+Buka `http://localhost:3000`, login dengan salah satu akun seeder di atas (atau daftar akun baru dari halaman login).
+
+### 4. (Opsional) Superuser untuk Django admin & Silk
+
+```bash
+docker compose exec web python manage.py createsuperuser
+```
+
+### Menjalankan unit test (Pertemuan 11)
+
+```bash
+docker compose exec web python manage.py test courses
+```
 
 ---
 
