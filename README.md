@@ -163,6 +163,28 @@ Server berjalan di `http://localhost:8000`.
 
 ---
 
+## Frontend React (Uji Coba API — folder `frontend/`)
+
+Aplikasi React kecil (Vite) untuk menguji API dari sisi **mahasiswa**, **dosen**, dan **admin**.
+
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+Buka `http://localhost:3000` (backend harus jalan di `localhost:8000`; request `/api` di-proxy oleh Vite sehingga bebas CORS).
+
+Fitur per peran:
+- **Semua**: register/login (pilih peran), katalog course dengan search, filter harga `gte/lte`, sorting, pagination 5/halaman, tab "Uji Rate Limit" (kirim 13 request anonim → request ke-11 harus `429 "Too many request"`).
+- **Mahasiswa (student)**: enroll course, daftar "Course Saya", tandai lesson selesai (progress), download attachment.
+- **Dosen (instructor)**: buat course, edit course (PATCH), upload gambar course, tambah lesson, edit judul lesson (PATCH), upload attachment.
+- **Admin**: hapus course.
+
+> Catatan: untuk mendukung frontend ini, backend ditambah 2 hal kecil (additive, kontrak lama tidak berubah): endpoint `POST /api/v1/lessons/?course_id=&title=&order=` (create lesson, hanya pemilik course) dan field `enrollment_id` pada response `GET /enrollments/my-courses` (dibutuhkan untuk endpoint progress).
+
+---
+
 ## Testing dengan Postman
 
 1. Import `Simple_LMS_API.postman_collection.json` ke Postman.

@@ -1,0 +1,122 @@
+* { box-sizing: border-box; }
+
+:root {
+  --bg: #f4f6fb;
+  --card: #ffffff;
+  --border: #dde3ee;
+  --text: #1d2433;
+  --muted: #667085;
+  --primary: #3b5bdb;
+  --primary-dark: #2f4ac0;
+  --danger: #d64545;
+  --success: #2f9e63;
+  --warning-bg: #fff3cd;
+  --warning-border: #ffe08a;
+}
+
+body {
+  margin: 0;
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+}
+
+.container { max-width: 960px; margin: 0 auto; padding: 16px; }
+
+/* ---------- Header ---------- */
+.topbar {
+  background: var(--card);
+  border-bottom: 1px solid var(--border);
+  padding: 12px 0;
+}
+.topbar .container {
+  display: flex; align-items: center; gap: 12px; padding-top: 0; padding-bottom: 0;
+}
+.topbar h1 { font-size: 18px; margin: 0; flex: 1; }
+.role-badge {
+  padding: 2px 10px; border-radius: 999px; font-size: 12px; font-weight: 600;
+  text-transform: capitalize;
+}
+.role-student { background: #e7f0ff; color: #2b5bd7; }
+.role-instructor { background: #e6f7ee; color: #1f7a4d; }
+.role-admin { background: #fdecec; color: #c03535; }
+
+.tabs { display: flex; gap: 8px; margin: 16px 0; flex-wrap: wrap; }
+.tabs button {
+  padding: 8px 16px; border-radius: 8px; border: 1px solid var(--border);
+  background: var(--card); cursor: pointer; font-size: 14px;
+}
+.tabs button.active { background: var(--primary); border-color: var(--primary); color: white; }
+
+/* ---------- Cards & forms ---------- */
+.card {
+  background: var(--card); border: 1px solid var(--border); border-radius: 12px;
+  padding: 16px; margin-bottom: 12px;
+}
+.card h2 { margin: 0 0 12px; font-size: 16px; }
+.card h3 { margin: 0 0 8px; font-size: 15px; }
+
+.row { display: flex; gap: 8px; flex-wrap: wrap; align-items: flex-end; }
+.field { display: flex; flex-direction: column; gap: 4px; }
+.field label { font-size: 12px; color: var(--muted); }
+
+input, select, textarea {
+  padding: 8px 10px; border: 1px solid var(--border); border-radius: 8px;
+  font-size: 14px; font-family: inherit; background: white;
+}
+input:focus, select:focus, textarea:focus { outline: 2px solid #b9c6f5; border-color: var(--primary); }
+
+button.btn {
+  padding: 8px 14px; border-radius: 8px; border: none; cursor: pointer;
+  background: var(--primary); color: white; font-size: 14px; font-weight: 600;
+}
+button.btn:hover { background: var(--primary-dark); }
+button.btn:disabled { opacity: 0.5; cursor: not-allowed; }
+button.btn.secondary { background: white; color: var(--text); border: 1px solid var(--border); }
+button.btn.danger { background: var(--danger); }
+button.btn.success { background: var(--success); }
+button.btn.small { padding: 4px 10px; font-size: 13px; font-weight: 500; }
+
+/* ---------- Alerts ---------- */
+.alert { padding: 10px 14px; border-radius: 8px; margin-bottom: 12px; font-size: 14px; }
+.alert.error { background: #fdecec; border: 1px solid #f5b5b5; color: #a13030; }
+.alert.success { background: #e6f7ee; border: 1px solid #a8dfc2; color: #1f7a4d; }
+.alert.warning { background: var(--warning-bg); border: 1px solid var(--warning-border); color: #7a5b00; }
+
+/* ---------- Course list ---------- */
+.course-item {
+  display: flex; justify-content: space-between; align-items: center; gap: 12px;
+  padding: 12px; border: 1px solid var(--border); border-radius: 10px; margin-bottom: 8px;
+  background: white;
+}
+.course-item .info { flex: 1; min-width: 0; }
+.course-item .name { font-weight: 600; }
+.course-item .meta { font-size: 13px; color: var(--muted); margin-top: 2px; }
+.price-tag { font-weight: 700; color: var(--primary); white-space: nowrap; }
+
+.pagination { display: flex; gap: 8px; align-items: center; justify-content: center; margin-top: 12px; }
+.pagination span { font-size: 14px; color: var(--muted); }
+
+/* ---------- Lessons ---------- */
+.lesson-item {
+  display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+  padding: 10px 12px; border: 1px solid var(--border); border-radius: 8px; margin-bottom: 6px;
+}
+.lesson-item .title { flex: 1; min-width: 160px; }
+.lesson-item .order { color: var(--muted); font-size: 13px; }
+
+.muted { color: var(--muted); font-size: 14px; }
+.mono { font-family: Consolas, monospace; font-size: 13px; }
+
+/* ---------- Auth page ---------- */
+.auth-wrap { max-width: 400px; margin: 48px auto; }
+.auth-wrap .field { margin-bottom: 12px; }
+.auth-wrap input, .auth-wrap select { width: 100%; }
+.auth-switch { text-align: center; margin-top: 12px; font-size: 14px; }
+.auth-switch a { color: var(--primary); cursor: pointer; }
+
+/* ---------- Throttle test ---------- */
+.throttle-log { max-height: 260px; overflow-y: auto; }
+.throttle-log div { padding: 2px 0; border-bottom: 1px dashed var(--border); }
+.status-200 { color: var(--success); font-weight: 600; }
+.status-429 { color: var(--danger); font-weight: 700; }

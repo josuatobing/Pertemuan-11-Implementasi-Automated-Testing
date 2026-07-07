@@ -152,6 +152,19 @@ def upload_course_image(request, course_id: int, file: UploadedFile = File(...))
     return {"message": "Image berhasil diupload.", "filename": file.name}
 
 
+@lessons_router.post("", auth=JWTAuth(), response=LessonOut)
+def create_lesson(request, course_id: int, title: str, order: int = 1):
+    """Create lesson untuk sebuah course. Hanya instructor pemilik course."""
+    is_instructor(request.auth)
+
+    course = get_object_or_404(Course, id=course_id)
+
+    if course.instructor != request.auth:
+        raise HttpError(403, "Hanya instructor pemilik course yang boleh menambah lesson.")
+
+    return Lesson.objects.create(course=course, title=title, order=order)
+
+
 @lessons_router.post("/{lesson_id}/upload-attachment/", auth=JWTAuth())
 def upload_lesson_attachment(request, lesson_id: int, file: UploadedFile = File(...)):
     """Upload file materi (attachment) untuk lesson. Hanya instructor pemilik course."""

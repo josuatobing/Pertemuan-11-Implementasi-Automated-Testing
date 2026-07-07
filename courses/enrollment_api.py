@@ -37,6 +37,7 @@ def get_my_courses(request):
     return [
         {
             "id": e.course.id,
+            "enrollment_id": e.id,
             "name": e.course.name,
             "description": e.course.description,
             "instructor": e.course.instructor.username,
