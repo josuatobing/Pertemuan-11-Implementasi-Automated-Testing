@@ -85,7 +85,12 @@ Simple_LMS_API.postman_collection.json
    docker compose exec web python manage.py make_jwt_key
    ```
    Menghasilkan `jwt-signing.pem` (privat) dan `jwt-signing.pub` (publik) di root project.
-5. (Opsional) Buat superuser untuk akses Django admin & Silk:
+5. (Opsional tapi disarankan) Isi database dengan data contoh:
+   ```bash
+   docker compose exec web python manage.py seed
+   ```
+   Idempotent (aman dijalankan berulang). Membuat 5 akun — `admin/admin123`, `dosen/dosen123`, `dosen2/dosen2123`, `mahasiswa/mahasiswa123`, `mahasiswa2/mahasiswa2123` — plus 4 kategori, 12 course (3 halaman pagination), 12 lesson, dan 3 enrollment.
+6. (Opsional) Buat superuser untuk akses Django admin & Silk:
    ```bash
    docker compose exec web python manage.py createsuperuser
    ```
