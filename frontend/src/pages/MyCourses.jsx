@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { api } from '../api'
+import { courseTheme } from '../theme'
 
 export default function MyCourses({ onOpen }) {
   const [courses, setCourses] = useState([])
@@ -14,22 +15,49 @@ export default function MyCourses({ onOpen }) {
   }, [])
 
   return (
-    <div className="card">
-      <h2>Course Saya (enrolled)</h2>
+    <div className="container" style={{ paddingTop: 36, paddingBottom: 48 }}>
+      <div className="section-head" style={{ marginTop: 0 }}>
+        <div>
+          <h2>🎒 Pembelajaran Saya</h2>
+          <div className="sub">Course yang sudah kamu ikuti (enrolled) — lanjutkan belajarmu!</div>
+        </div>
+      </div>
+
       {error && <div className="alert error">{error}</div>}
       {loading && <p className="muted">Memuat…</p>}
+
       {!loading && courses.length === 0 && (
-        <p className="muted">Belum terdaftar di course manapun. Buka Katalog lalu klik Enroll.</p>
-      )}
-      {courses.map((c) => (
-        <div className="course-item" key={c.enrollment_id}>
-          <div className="info">
-            <div className="name">{c.name}</div>
-            <div className="meta">oleh {c.instructor} · enrollment #{c.enrollment_id}</div>
-          </div>
-          <button className="btn secondary small" onClick={() => onOpen(c.id)}>Buka</button>
+        <div className="empty-state">
+          <div className="big">📭</div>
+          <b>Belum ada course yang kamu ikuti.</b>
+          <p>Buka Katalog, pilih course menarik, lalu klik “Daftar Sekarang”.</p>
         </div>
-      ))}
+      )}
+
+      <div className="course-grid">
+        {courses.map((c) => {
+          const theme = courseTheme(null, c.id)
+          return (
+            <article className="ccard" key={c.enrollment_id} onClick={() => onOpen(c.id)}>
+              <div className="thumb" style={{ background: theme.gradient }}>
+                {c.image ? <img src={c.image} alt={c.name} loading="lazy" /> : <span>{theme.emoji}</span>}
+                <span className="cat-chip">Enrolled #{c.enrollment_id}</span>
+              </div>
+              <div className="body">
+                <div className="title">{c.name}</div>
+                <div className="desc">{c.description}</div>
+                <div className="instructor">
+                  <span className="mini-avatar">{c.instructor[0].toUpperCase()}</span>
+                  {c.instructor}
+                </div>
+              </div>
+              <div className="cfoot">
+                <span className="price" style={{ fontSize: 14 }}>Lanjutkan belajar →</span>
+              </div>
+            </article>
+          )
+        })}
+      </div>
     </div>
   )
 }

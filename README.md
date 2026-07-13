@@ -35,7 +35,7 @@ Dibangun dengan **Django 5 + Django Ninja**, dijalankan lewat **Docker Compose**
 - Endpoint demo terproteksi `HttpJwtAuth` (`courses/api_jwt_demo.py`)
 
 **Pertemuan 10 - Throttling, Pagination, Filtering**
-- Rate limiting: `AnonRateThrottle('10/m')` (anon) & `AuthRateThrottle('100/m')` (authenticated) di level `NinjaAPI`, pesan custom `"Too many request"` saat limit terlampaui (`config/api.py`)
+- Rate limiting: `AnonRateThrottle('50/m')` (anon) & `AuthRateThrottle('200/m')` (authenticated) di level `NinjaAPI`, pesan custom `"Too many request"` saat limit terlampaui (`config/api.py`). Awalnya 10/m sesuai materi, dinaikkan agar browsing frontend tidak mudah kena 429.
 - Pagination: `PageNumberPagination(page_size=5)` — 5 data/halaman (`courses/api.py`)
 - Filtering dengan konvensi `gte`/`lte`: `price_gte`, `price_lte`, `created_gte`, `created_lte`, plus `search` (`courses/schemas.py` — `CourseFilter`)
 - Sorting: `ordering=name|-name|price|-price|created_at|-created_at`
@@ -203,7 +203,7 @@ npm run dev
 Buka `http://localhost:3000` (backend harus jalan di `localhost:8000`; request `/api` di-proxy oleh Vite sehingga bebas CORS).
 
 Fitur per peran:
-- **Semua**: register/login (pilih peran), katalog course dengan search, filter harga `gte/lte`, sorting, pagination 5/halaman, tab "Uji Rate Limit" (kirim 13 request anonim → request ke-11 harus `429 "Too many request"`).
+- **Semua**: register/login (pilih peran), katalog course dengan search, filter harga `gte/lte`, sorting, pagination 5/halaman, tab "Lab API" (kirim 53 request anonim → request ke-51 harus `429 "Too many request"`).
 - **Mahasiswa (student)**: enroll course, daftar "Course Saya", tandai lesson selesai (progress), download attachment.
 - **Dosen (instructor)**: buat course, edit course (PATCH), upload gambar course, tambah lesson, edit judul lesson (PATCH), upload attachment.
 - **Admin**: hapus course.
@@ -220,7 +220,7 @@ Fitur per peran:
    1. Folder **1. Auth** → jalankan Register (instructor/student/admin) lalu Login (masing-masing role). Token otomatis tersimpan ke collection variables lewat test script.
    2. Folder **3. Courses - Protected** → Create Course (pakai `instructor_access_token`) untuk membuat data uji.
    3. Folder **2, 4, 5, 6** bisa dites bebas sesudah ada data.
-   4. Folder **7. Rate Limiting** → jalankan request yang sama >10x lewat Collection Runner (Iterations=13, Delay=0) untuk lihat response `429`.
+   4. Folder **7. Rate Limiting** → jalankan request yang sama >50x lewat Collection Runner (Iterations=53, Delay=0) untuk lihat response `429`.
    5. Folder **8. Pertemuan 9** → Mobile/Web Sign In dulu (isi token `jwt_demo_access_token`), baru endpoint Protected Demo.
    6. Halaman HTML Pertemuan 10 dites langsung di browser: `http://localhost:8000/courses-page/`.
 
@@ -228,6 +228,6 @@ Fitur per peran:
 
 ## Catatan Implementasi (bug yang ditemukan & diperbaiki saat testing)
 
-1. **Rate limiting tidak jalan di awal** — kalau rate diset lewat *class attribute* `rate = "..."` di subclass `AnonRateThrottle`, itu **diabaikan**; `SimpleRateThrottle.__init__` cuma membaca rate dari constructor arg (`AnonRateThrottle("10/m")`) atau dari default `THROTTLE_RATES` ninja. Sudah diperbaiki dengan instansiasi langsung `AnonRateThrottle("10/m")` (pola yang sama seperti di materi resmi), dan diverifikasi (`429` muncul tepat di request ke-11 untuk limit 10/menit).
+1. **Rate limiting tidak jalan di awal** — kalau rate diset lewat *class attribute* `rate = "..."` di subclass `AnonRateThrottle`, itu **diabaikan**; `SimpleRateThrottle.__init__` cuma membaca rate dari constructor arg (`AnonRateThrottle("10/m")`) atau dari default `THROTTLE_RATES` ninja. Sudah diperbaiki dengan instansiasi langsung `AnonRateThrottle("10/m")` (pola yang sama seperti di materi resmi), dan diverifikasi (`429` muncul tepat di request ke-11 untuk limit 10/menit; limit kemudian dinaikkan ke 50/menit agar nyaman dipakai frontend).
 2. **Refresh cookie web auth tidak pernah terkirim balik** — `WEB_REFRESH_COOKIE_PATH` default dari `django-ninja-simple-jwt` (`/api/auth/web`) tidak cocok dengan mount path project ini (`/api/v1/auth/web/`), sehingga browser tidak mengirim cookie ke `token-refresh`/`sign-out`. Diperbaiki via `NINJA_SIMPLE_JWT["WEB_REFRESH_COOKIE_PATH"]` di `settings.py`.
 3. **Trailing slash** — endpoint `POST /courses/` wajib pakai trailing slash (`APPEND_SLASH`), sedangkan `GET/PATCH/DELETE /courses/{id}` tidak pakai slash.

@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
 import { api, downloadWithAuth } from '../api'
+import { courseTheme, formatPrice } from '../theme'
 
 export default function CourseDetail({ courseId, user, onBack, onDeleted }) {
   const [course, setCourse] = useState(null)
@@ -50,7 +51,7 @@ export default function CourseDetail({ courseId, user, onBack, onDeleted }) {
   async function download(lesson) {
     try {
       await downloadWithAuth(`/lessons/${lesson.id}/download/`, `${lesson.title}.bin`)
-      flash(`Attachment "${lesson.title}" berhasil didownload`)
+      flash(`Materi "${lesson.title}" berhasil didownload`)
     } catch (err) { fail(err) }
   }
 
@@ -65,77 +66,132 @@ export default function CourseDetail({ courseId, user, onBack, onDeleted }) {
 
   if (!course) {
     return (
-      <div className="card">
-        {error ? <div className="alert error">{error}</div> : <p className="muted">Memuat…</p>}
-        <button className="btn secondary small" onClick={onBack}>‹ Kembali</button>
+      <div className="container" style={{ padding: '48px 24px' }}>
+        {error ? <div className="alert error">{error}</div> : <p className="muted">Memuat course…</p>}
+        <button className="btn ghost small" onClick={onBack}>‹ Kembali ke katalog</button>
       </div>
     )
   }
 
+  const theme = courseTheme(course.category, course.id)
+
   return (
     <>
-      <div className="card">
-        <button className="btn secondary small" onClick={onBack} style={{ marginBottom: 12 }}>
-          ‹ Kembali ke katalog
-        </button>
-        <h2>{course.name}</h2>
-        <p className="muted">
-          Dosen: {course.instructor}
-          {course.category ? ` · Kategori: ${course.category}` : ''} · Dibuat:{' '}
-          {new Date(course.created_at).toLocaleDateString('id-ID')}
-        </p>
-        <p>{course.description}</p>
-        <p className="price-tag">
-          {course.price === 0 ? 'Gratis' : `Rp${course.price.toLocaleString('id-ID')}`}
-        </p>
-
-        {error && <div className="alert error">{error}</div>}
-        {notice && <div className="alert success">{notice}</div>}
-
-        <div className="row">
-          {isStudent && !enrollment && (
-            <button className="btn success" onClick={enroll}>Enroll Course Ini</button>
-          )}
-          {isStudent && enrollment && <span className="alert success" style={{ margin: 0 }}>✓ Anda terdaftar di course ini</span>}
-          {user.role === 'admin' && (
-            <button className="btn danger" onClick={deleteCourse}>Hapus Course (admin)</button>
-          )}
-        </div>
-      </div>
-
-      {isOwner && <EditCoursePanel course={course} onChanged={load} />}
-
-      <div className="card">
-        <h3>Lessons ({course.lessons.length})</h3>
-        {course.lessons.length === 0 && <p className="muted">Belum ada lesson.</p>}
-        {course.lessons.map((l) => (
-          <div className="lesson-item" key={l.id}>
-            <span className="order">#{l.order}</span>
-            <span className="title">{l.title}</span>
-            {l.has_attachment ? (
-              <button className="btn secondary small" onClick={() => download(l)}>Download materi</button>
-            ) : (
-              <span className="muted">tanpa attachment</span>
-            )}
-            {isStudent && enrollment && (
-              <button className="btn success small" onClick={() => markComplete(l)}>Tandai selesai</button>
-            )}
-            {isOwner && <LessonOwnerTools lesson={l} onChanged={load} onNotice={flash} onError={fail} />}
+      <section className="detail-hero" style={{ background: theme.gradient }}>
+        <div className="container">
+          <button className="back" onClick={onBack}>‹ Kembali ke katalog</button>
+          {course.category && <div><span className="chip light">{course.category}</span></div>}
+          <h1 style={{ marginTop: 10 }}>{course.name}</h1>
+          <div className="meta">
+            <span>👨‍🏫 Dosen: <b>{course.instructor}</b></span>
+            <span>📖 {course.lessons.length} lesson</span>
+            <span>🗓 {new Date(course.created_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}</span>
           </div>
-        ))}
-        {isOwner && <AddLessonForm courseId={courseId} onAdded={load} />}
+        </div>
+      </section>
+
+      <div className="container">
+        <div className="detail-grid">
+          <div className="detail-main">
+            {error && <div className="alert error">{error}</div>}
+            {notice && <div className="alert success">{notice}</div>}
+
+            <div className="panel">
+              <h3>Tentang Course Ini</h3>
+              <p style={{ marginBottom: 0 }}>{course.description}</p>
+            </div>
+
+            {isOwner && <ManageCoursePanel course={course} onChanged={load} />}
+
+            <div className="panel">
+              <h3>📚 Kurikulum</h3>
+              <p className="panel-sub" style={{ marginBottom: 16 }}>
+                {course.lessons.length === 0
+                  ? 'Belum ada lesson di course ini.'
+                  : `${course.lessons.length} lesson tersusun berurutan.`}
+              </p>
+              <ul className="curriculum">
+                {course.lessons.map((l) => (
+                  <li key={l.id}>
+                    <span className="num">{l.order}</span>
+                    <span className="lesson-title">{l.title}</span>
+                    {l.has_attachment ? (
+                      <button className="btn outline small" onClick={() => download(l)}>⬇ Materi</button>
+                    ) : (
+                      <span className="lesson-note">belum ada materi</span>
+                    )}
+                    {isStudent && enrollment && (
+                      <button className="btn success small" onClick={() => markComplete(l)}>✓ Selesai</button>
+                    )}
+                    {isOwner && (
+                      <LessonOwnerTools lesson={l} onChanged={load} onNotice={flash} onError={fail} />
+                    )}
+                  </li>
+                ))}
+              </ul>
+              {isOwner && <AddLessonForm courseId={courseId} onAdded={load} />}
+            </div>
+          </div>
+
+          <aside>
+            <div className="sidebar-card">
+              {course.image ? (
+                <img
+                  src={course.image}
+                  alt={course.name}
+                  style={{ width: '100%', height: 150, objectFit: 'cover', borderRadius: 12, marginBottom: 18, display: 'block' }}
+                />
+              ) : (
+                <div
+                  style={{
+                    background: theme.gradient, borderRadius: 12, height: 120,
+                    display: 'grid', placeItems: 'center', fontSize: 42, marginBottom: 18,
+                  }}
+                >
+                  {theme.emoji}
+                </div>
+              )}
+              <div className={`price-big ${course.price === 0 ? 'free' : ''}`}>{formatPrice(course.price)}</div>
+
+              <div style={{ marginTop: 16 }}>
+                {isStudent && !enrollment && (
+                  <button className="btn accent block" onClick={enroll}>Daftar Sekarang</button>
+                )}
+                {isStudent && enrollment && (
+                  <div className="enrolled-banner">✓ Anda terdaftar di course ini</div>
+                )}
+                {user.role === 'admin' && (
+                  <button className="btn danger block" onClick={deleteCourse}>🗑 Hapus Course (Admin)</button>
+                )}
+                {isOwner && (
+                  <div className="enrolled-banner" style={{ background: '#eef2ff', borderColor: '#c7d2fe', color: '#4338ca' }}>
+                    🧑‍🏫 Anda pemilik course ini
+                  </div>
+                )}
+              </div>
+
+              <ul className="includes">
+                <li>📖 {course.lessons.length} lesson terstruktur</li>
+                <li>📎 Materi bisa didownload (member)</li>
+                <li>✅ Pelacakan progress belajar</li>
+                <li>🔐 Akses via JWT Authentication</li>
+              </ul>
+            </div>
+          </aside>
+        </div>
       </div>
     </>
   )
 }
 
-/* ---------- Panel dosen: edit course + upload gambar ---------- */
+/* ---------- Panel dosen pemilik: edit course + upload gambar ---------- */
 
-function EditCoursePanel({ course, onChanged }) {
+function ManageCoursePanel({ course, onChanged }) {
+  const [open, setOpen] = useState(false)
   const [name, setName] = useState(course.name)
   const [description, setDescription] = useState(course.description)
   const [price, setPrice] = useState(course.price)
-  const [file, setFile] = useState(null)
+  const [uploading, setUploading] = useState(false)
   const [msg, setMsg] = useState('')
   const [error, setError] = useState('')
 
@@ -152,44 +208,70 @@ function EditCoursePanel({ course, onChanged }) {
     } catch (err) { setError(err.message) }
   }
 
-  async function uploadImage() {
+  // Upload langsung saat file dipilih — tidak perlu tombol terpisah,
+  // supaya tidak tertukar dengan tombol "Simpan" (PATCH) yang hanya mengirim teks.
+  async function uploadImage(e) {
+    const file = e.target.files[0]
     if (!file) return
-    setMsg(''); setError('')
+    setMsg(''); setError(''); setUploading(true)
     try {
       const form = new FormData()
       form.append('file', file)
       const res = await api('POST', `/courses/${course.id}/upload-image/`, { form })
       setMsg(`${res.message} (${res.filename})`)
+      onChanged()
     } catch (err) { setError(err.message) }
+    finally {
+      setUploading(false)
+      e.target.value = ''
+    }
   }
 
   return (
-    <div className="card">
-      <h3>Kelola Course (khusus dosen pemilik)</h3>
-      {error && <div className="alert error">{error}</div>}
-      {msg && <div className="alert success">{msg}</div>}
-      <form onSubmit={save} className="row" style={{ marginBottom: 12 }}>
-        <div className="field" style={{ flex: 1, minWidth: 140 }}>
-          <label>Nama</label>
-          <input value={name} onChange={(e) => setName(e.target.value)} />
+    <div className="panel">
+      <div className="panel-head" onClick={() => setOpen(!open)}>
+        <div>
+          <h3>⚙️ Kelola Course</h3>
+          <p className="panel-sub">Edit info (PATCH) dan upload gambar thumbnail — khusus dosen pemilik.</p>
         </div>
-        <div className="field" style={{ flex: 2, minWidth: 180 }}>
-          <label>Deskripsi</label>
-          <input value={description} onChange={(e) => setDescription(e.target.value)} />
-        </div>
-        <div className="field">
-          <label>Harga</label>
-          <input type="number" min="0" value={price} onChange={(e) => setPrice(e.target.value)} style={{ width: 110 }} />
-        </div>
-        <button className="btn">Simpan (PATCH)</button>
-      </form>
-      <div className="row">
-        <div className="field">
-          <label>Gambar course (jpeg/png/webp, max 2MB)</label>
-          <input type="file" accept="image/jpeg,image/png,image/webp" onChange={(e) => setFile(e.target.files[0])} />
-        </div>
-        <button className="btn secondary" onClick={uploadImage} disabled={!file}>Upload Gambar</button>
+        <button className="btn outline small">{open ? 'Tutup' : 'Kelola'}</button>
       </div>
+      {open && (
+        <div className="panel-body">
+          {error && <div className="alert error">{error}</div>}
+          {msg && <div className="alert success">{msg}</div>}
+          <form onSubmit={save} className="form-row" style={{ marginBottom: 16 }}>
+            <div className="field">
+              <label>Nama</label>
+              <input value={name} onChange={(e) => setName(e.target.value)} />
+            </div>
+            <div className="field" style={{ flex: 2 }}>
+              <label>Deskripsi</label>
+              <input value={description} onChange={(e) => setDescription(e.target.value)} />
+            </div>
+            <div className="field narrow">
+              <label>Harga (Rp)</label>
+              <input type="number" min="0" value={price} onChange={(e) => setPrice(e.target.value)} />
+            </div>
+            <button className="btn">Simpan</button>
+          </form>
+          <div className="form-row" style={{ alignItems: 'center' }}>
+            {course.image && (
+              <img
+                src={course.image}
+                alt="Gambar course saat ini"
+                style={{ width: 96, height: 60, objectFit: 'cover', borderRadius: 10, border: '1px solid var(--border)' }}
+              />
+            )}
+            <div className="field" style={{ flex: 2 }}>
+              <label>
+                {uploading ? 'Mengupload gambar…' : 'Ganti gambar course (jpeg/png/webp, maks 2MB) — langsung tersimpan saat dipilih'}
+              </label>
+              <input type="file" accept="image/jpeg,image/png,image/webp" onChange={uploadImage} disabled={uploading} />
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
@@ -211,17 +293,17 @@ function AddLessonForm({ courseId, onAdded }) {
   }
 
   return (
-    <form onSubmit={submit} className="row" style={{ marginTop: 12 }}>
+    <form onSubmit={submit} className="form-row" style={{ marginTop: 16 }}>
       {error && <div className="alert error" style={{ width: '100%' }}>{error}</div>}
-      <div className="field" style={{ flex: 1, minWidth: 180 }}>
+      <div className="field" style={{ flex: 2 }}>
         <label>Judul lesson baru</label>
-        <input value={title} onChange={(e) => setTitle(e.target.value)} required />
+        <input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="cth: Pengenalan REST API" required />
       </div>
-      <div className="field">
+      <div className="field narrow">
         <label>Urutan</label>
-        <input type="number" min="1" value={order} onChange={(e) => setOrder(e.target.value)} style={{ width: 90 }} />
+        <input type="number" min="1" value={order} onChange={(e) => setOrder(e.target.value)} />
       </div>
-      <button className="btn">+ Tambah Lesson</button>
+      <button className="btn">＋ Tambah Lesson</button>
     </form>
   )
 }
@@ -253,11 +335,11 @@ function LessonOwnerTools({ lesson, onChanged, onNotice, onError }) {
 
   return (
     <>
-      <label className="btn secondary small" style={{ cursor: 'pointer' }}>
-        Upload materi
+      <label className="btn ghost small" style={{ cursor: 'pointer' }}>
+        📎 Upload materi
         <input type="file" hidden onChange={uploadAttachment} />
       </label>
-      <button className="btn secondary small" onClick={rename}>Edit judul</button>
+      <button className="btn ghost small" onClick={rename}>✏️ Edit</button>
     </>
   )
 }
