@@ -13,7 +13,9 @@ COPY . .
 
 EXPOSE 8000
 
-# Default = mode produksi (Koyeb dsb.). Dev lokal tidak terpengaruh karena
-# docker-compose.yml meng-override command ke runserver.
-RUN chmod +x start.sh
+# Default = mode produksi (Hugging Face Spaces dsb.). Dev lokal tidak
+# terpengaruh karena docker-compose.yml meng-override command ke runserver.
+# HF Spaces menjalankan container sebagai user non-root (uid 1000), jadi /app
+# harus writable (jwt key, media/, staticfiles/ dibuat saat runtime).
+RUN chmod +x start.sh && chmod -R a+rwX /app
 CMD ["./start.sh"]

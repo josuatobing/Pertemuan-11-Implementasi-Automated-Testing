@@ -1,3 +1,16 @@
+---
+title: Josua University API
+emoji: 🎓
+colorFrom: indigo
+colorTo: purple
+sdk: docker
+app_port: 8000
+pinned: false
+---
+
+<!-- Blok YAML di atas adalah metadata untuk deploy di Hugging Face Spaces
+     (Docker, port 8000). Di GitHub blok ini hanya tampil sebagai tabel kecil. -->
+
 # Simple LMS - REST API with Django Ninja
 
 REST API Learning Management System dengan JWT Authentication, Role-Based Authorization, dan Advanced API Features (filtering, sorting, pagination, rate limiting, API versioning, file upload/download, partial update).
