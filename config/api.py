@@ -14,10 +14,11 @@ apiv1 = NinjaAPI(
     title="Simple LMS API",
     version="1.0",
     urls_namespace="v1",
-    # Pertemuan 10: request ke-11 dalam 1 menit harus kena throttle.
+    # Pertemuan 10: rate limiting. Awalnya 10/m sesuai materi, dinaikkan ke 50/m
+    # supaya browsing normal di frontend tidak gampang kena 429.
     # (rate diteruskan sebagai constructor arg, bukan class attribute -
     # AnonRateThrottle/AuthRateThrottle hanya membaca rate lewat sini)
-    throttle=[AnonRateThrottle("10/m"), AuthRateThrottle("100/m")],
+    throttle=[AnonRateThrottle("50/m"), AuthRateThrottle("200/m")],
 )
 
 

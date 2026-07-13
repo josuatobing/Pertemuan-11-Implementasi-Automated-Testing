@@ -41,6 +41,7 @@ def get_my_courses(request):
             "name": e.course.name,
             "description": e.course.description,
             "instructor": e.course.instructor.username,
+            "image": e.course.image.url if e.course.image else None,
         }
         for e in enrollments
     ]

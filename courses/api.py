@@ -60,6 +60,7 @@ def get_course_detail(request, course_id: int):
         "price": course.price,
         "instructor": course.instructor.username,
         "category": course.category.name if course.category else None,
+        "image": course.image.url if course.image else None,
         "created_at": course.created_at,
         "lessons": [
             {

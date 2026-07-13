@@ -14,10 +14,39 @@ Akun yang dibuat (password sama dengan pola <username>123):
     mahasiswa2 / mahasiswa2123 (role: student)
 """
 
+import io
+
 from django.contrib.auth.models import User
+from django.core.files.base import ContentFile
 from django.core.management.base import BaseCommand
+from PIL import Image
 
 from courses.models import Category, Course, Enrollment, Lesson, Progress, UserProfile
+
+# Warna gradient cover per kategori (sinkron dengan tema frontend)
+CATEGORY_COLORS = {
+    'Pemrograman': ((79, 70, 229), (168, 85, 247)),
+    'Basis Data': ((8, 145, 178), (37, 99, 235)),
+    'Jaringan': ((5, 150, 105), (20, 184, 166)),
+    'Desain': ((219, 39, 119), (244, 63, 94)),
+}
+DEFAULT_COLORS = ((99, 102, 241), (14, 165, 233))
+
+
+def make_cover(colors):
+    """Gambar cover PNG 640x360 bergradient diagonal, digenerate dengan Pillow
+    (tanpa butuh file gambar eksternal)."""
+    c1, c2 = colors
+    mid = tuple((a + b) // 2 for a, b in zip(c1, c2))
+    img = Image.new('RGB', (2, 2))
+    img.putpixel((0, 0), c1)
+    img.putpixel((1, 0), mid)
+    img.putpixel((0, 1), mid)
+    img.putpixel((1, 1), c2)
+    img = img.resize((640, 360), Image.BILINEAR)
+    buf = io.BytesIO()
+    img.save(buf, format='PNG')
+    return ContentFile(buf.getvalue())
 
 
 class Command(BaseCommand):
@@ -74,6 +103,9 @@ class Command(BaseCommand):
                     'category': categories[category],
                 },
             )
+            if not course.image:
+                colors = CATEGORY_COLORS.get(category, DEFAULT_COLORS)
+                course.image.save(f'seed_course_{course.id}.png', make_cover(colors), save=True)
             courses[name] = course
             self.stdout.write(f"  course \"{name}\"{' [baru]' if created else ''}")
 

@@ -14,6 +14,7 @@ class CourseOut(Schema):
     price: int
     instructor: str
     category: Optional[str] = None
+    image: Optional[str] = None
     created_at: datetime
 
     @staticmethod
@@ -23,6 +24,10 @@ class CourseOut(Schema):
     @staticmethod
     def resolve_category(obj):
         return obj.category.name if obj.category else None
+
+    @staticmethod
+    def resolve_image(obj):
+        return obj.image.url if obj.image else None
 
 
 class CourseFilter(FilterSchema):
