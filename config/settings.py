@@ -10,6 +10,7 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.2/ref/settings/
 """
 
+import os
 from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -20,12 +21,15 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-2fz-bvxtuc6#r2d75&-*d-!pct9keuc6_!q+ap3)lsmh+bgrs)'
+SECRET_KEY = os.getenv(
+    'SECRET_KEY',
+    'django-insecure-2fz-bvxtuc6#r2d75&-*d-!pct9keuc6_!q+ap3)lsmh+bgrs)',
+)
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = os.getenv('DEBUG', 'True') == 'True'
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', '*').split(',')
 
 
 # Application definition
@@ -45,6 +49,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     'corsheaders.middleware.CorsMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -79,7 +84,6 @@ WSGI_APPLICATION = 'config.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
-import os
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
@@ -87,11 +91,11 @@ DATABASES = {
         'USER': os.getenv('DB_USER'),
         'PASSWORD': os.getenv('DB_PASSWORD'),
         'HOST': os.getenv('DB_HOST'),
-        'PORT': os.getenv('DB_PORT'),
+        'PORT': os.getenv('DB_PORT', '5432'),
+        # Postgres cloud (Neon/Supabase) mewajibkan SSL; set DB_SSLMODE=require
+        'OPTIONS': {'sslmode': os.getenv('DB_SSLMODE', 'prefer')},
     }
 }
-
-ALLOWED_HOSTS = ['*']
 
 
 # Password validation
@@ -129,6 +133,7 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
 
 STATIC_URL = 'static/'
+STATIC_ROOT = BASE_DIR / 'staticfiles'  # untuk collectstatic + whitenoise di produksi
 
 # Media files (uploaded by users)
 # https://docs.djangoproject.com/en/5.2/topics/files/
@@ -194,3 +199,9 @@ CSRF_TRUSTED_ORIGINS = [
     "http://127.0.0.1:8000",
     "http://127.0.0.1:8080",
 ]
+
+# Deployment: origin frontend produksi (mis. https://xxx.netlify.app),
+# bisa lebih dari satu dipisah koma.
+_frontend_origins = [o.strip() for o in os.getenv('FRONTEND_ORIGIN', '').split(',') if o.strip()]
+CORS_ALLOWED_ORIGINS += _frontend_origins
+CSRF_TRUSTED_ORIGINS += _frontend_origins

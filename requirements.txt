@@ -7,3 +7,5 @@ django-ninja
 django-ninja-simple-jwt
 PyJWT
 django-cors-headers
+gunicorn
+whitenoise

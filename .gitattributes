@@ -1,0 +1,2 @@
+# Script shell harus LF supaya jalan di container Linux walau di-checkout di Windows
+*.sh text eol=lf
