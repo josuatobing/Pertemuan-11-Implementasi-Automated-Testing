@@ -47,6 +47,20 @@ def get_my_courses(request):
     ]
 
 
+@router.get("/progress", auth=JWTAuth())
+def get_progress(request, course_id: int):
+    """Daftar lesson yang sudah diselesaikan user login pada sebuah course."""
+    is_student(request.auth)
+
+    lesson_ids = Progress.objects.filter(
+        user=request.auth,
+        completed=True,
+        lesson__course_id=course_id,
+    ).values_list('lesson_id', flat=True)
+
+    return {"completed_lesson_ids": list(lesson_ids)}
+
+
 @router.post("/{enrollment_id}/progress", auth=JWTAuth())
 def mark_lesson_complete(request, enrollment_id: int, lesson_id: int):
     is_student(request.auth)

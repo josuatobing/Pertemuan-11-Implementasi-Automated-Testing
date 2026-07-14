@@ -5,6 +5,7 @@ import { courseTheme, formatPrice } from '../theme'
 export default function CourseDetail({ courseId, user, onBack, onDeleted }) {
   const [course, setCourse] = useState(null)
   const [enrollment, setEnrollment] = useState(null) // {enrollment_id} kalau student sudah enroll
+  const [completedIds, setCompletedIds] = useState([]) // id lesson yang sudah ditandai selesai
   const [error, setError] = useState('')
   const [notice, setNotice] = useState('')
 
@@ -20,6 +21,14 @@ export default function CourseDetail({ courseId, user, onBack, onDeleted }) {
         const mine = await api('GET', '/enrollments/my-courses')
         const found = mine.find((m) => m.id === data.id)
         setEnrollment(found || null)
+        if (found) {
+          try {
+            const prog = await api('GET', '/enrollments/progress', { query: { course_id: courseId } })
+            setCompletedIds(prog.completed_lesson_ids)
+          } catch {
+            setCompletedIds([]) // backend lama belum punya endpoint ini — anggap belum ada progress
+          }
+        }
       }
     } catch (err) {
       setError(err.message)
@@ -44,6 +53,7 @@ export default function CourseDetail({ courseId, user, onBack, onDeleted }) {
       const res = await api('POST', `/enrollments/${enrollment.enrollment_id}/progress`, {
         query: { lesson_id: lesson.id },
       })
+      setCompletedIds((ids) => [...ids, lesson.id])
       flash(`${res.message}: ${res.lesson_title}`)
     } catch (err) { fail(err) }
   }
@@ -121,7 +131,11 @@ export default function CourseDetail({ courseId, user, onBack, onDeleted }) {
                       <span className="lesson-note">belum ada materi</span>
                     )}
                     {isStudent && enrollment && (
-                      <button className="btn success small" onClick={() => markComplete(l)}>✓ Selesai</button>
+                      completedIds.includes(l.id) ? (
+                        <span className="chip done">✅ Selesai</span>
+                      ) : (
+                        <button className="btn success small" onClick={() => markComplete(l)}>Tandai selesai</button>
+                      )
                     )}
                     {isOwner && (
                       <LessonOwnerTools lesson={l} onChanged={load} onNotice={flash} onError={fail} />

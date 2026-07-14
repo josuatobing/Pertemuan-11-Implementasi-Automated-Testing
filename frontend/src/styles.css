@@ -93,6 +93,7 @@ input:focus, select:focus, textarea:focus {
 }
 .chip.light { background: rgba(255, 255, 255, .2); color: #fff; backdrop-filter: blur(4px); }
 .chip.cat { background: #eef2ff; color: var(--brand-dark); }
+.chip.done { background: #ecfdf5; border: 1px solid #a7f3d0; color: #047857; }
 
 .role-badge {
   padding: 4px 12px; border-radius: 999px; font-size: 12px; font-weight: 700;
