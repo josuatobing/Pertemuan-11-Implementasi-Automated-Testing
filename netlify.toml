@@ -1,10 +1,6 @@
 # Konfigurasi Netlify untuk frontend React (folder frontend/).
 #
-# PENTING setelah deploy backend di Koyeb:
-# ganti kedua "https://GANTI-DENGAN-URL-KOYEB.koyeb.app" di bawah dengan URL
-# public service Koyeb kamu (contoh: https://simple-lms-josua.koyeb.app),
-# lalu commit + push — Netlify akan redeploy otomatis.
-#
+# Backend di-hosting di PythonAnywhere (free tier, SQLite, always-on).
 # Redirect /api dan /media di-proxy ke backend (status 200 = proxy, bukan
 # redirect browser), meniru proxy Vite saat dev — jadi kode frontend tidak
 # perlu tahu URL backend dan bebas masalah CORS/cookie.
@@ -16,13 +12,13 @@
 
 [[redirects]]
   from = "/api/*"
-  to = "https://GANTI-DENGAN-URL-KOYEB.koyeb.app/api/:splat"
+  to = "https://josuatobing.pythonanywhere.com/api/:splat"
   status = 200
   force = true
 
 [[redirects]]
   from = "/media/*"
-  to = "https://GANTI-DENGAN-URL-KOYEB.koyeb.app/media/:splat"
+  to = "https://josuatobing.pythonanywhere.com/media/:splat"
   status = 200
   force = true
 
